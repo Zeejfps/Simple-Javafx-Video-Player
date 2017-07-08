@@ -2,23 +2,27 @@ package videoplayer.views;
 
 import javafx.animation.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import videoplayer.App;
+import videoplayer.controllers.VideoPane;
 import videoplayer.model.Video;
 
 /**
  * Created by zeejfps on 7/7/2017.
  */
-public class VideoWallPane extends Pane {
+public class VideoWallPane extends StackPane {
 
     public static final Duration OPEN_DURATION = Duration.millis(175);
 
     private final Timeline animator;
+    private VideoPane videoPane;
     public final VideoGridPane gridPane;
 
     public VideoWallPane(Video[] videos) {
         gridPane = new VideoGridPane(5, 5, videos);
+        videoPane = new VideoPane();
+
         animator = new Timeline(new KeyFrame(Duration.seconds(5), event -> {
             int dir = App.R.nextInt(4);
             switch (dir) {
@@ -37,8 +41,9 @@ public class VideoWallPane extends Pane {
             }
         }));
         animator.setCycleCount(Animation.INDEFINITE);
+        videoPane.setVisible(false);
         setupVideoPanes();
-        getChildren().add(gridPane);
+        getChildren().addAll(gridPane, videoPane);
         animator.play();
     }
 
@@ -47,14 +52,18 @@ public class VideoWallPane extends Pane {
         for (int i = 0; i < videoImagePanes.length; i++) {
             for(int j = 0; j < videoImagePanes[i].length; j++) {
                 VideoImagePane vip = videoImagePanes[i][j];
-                int lol = i;
                 vip.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
 
+                    videoPane.setVisible(true);
+                    videoPane.playVideo(vip.getVideo());
+                    gridPane.setVisible(false);
+
+                    /*
                     animator.stop();
 
                     VideoPane vp = new VideoPane(vip.getVideo());
-                    vp.setMinSize(vip.getWidth(), vip.getHeight());
-                    vp.setMaxSize(vip.getWidth(), vip.getHeight());
+                    //vp.setMinSize(vip.getWidth(), vip.getHeight());
+                   // vp.setPrefSize(vip.getWidth(), vip.getHeight());
                     vp.relocate(vip.getLayoutX(),vip.getLayoutY());
                     getChildren().add(vp);
 
@@ -62,16 +71,34 @@ public class VideoWallPane extends Pane {
                     double sy = getHeight() / vip.getHeight();
 
                     Timeline timeline = new Timeline();
-                    KeyValue xVal = new KeyValue(vp.layoutXProperty(), (getWidth()-vip.getWidth())*0.5, Interpolator.EASE_IN);
-                    KeyValue yVal = new KeyValue(vp.layoutYProperty(), (getHeight()-vip.getHeight())*0.5, Interpolator.EASE_IN);
-                    timeline.getKeyFrames().add(new KeyFrame(OPEN_DURATION, xVal, yVal));
+                    timeline.getKeyFrames().add(new KeyFrame(OPEN_DURATION,
+                        new KeyValue(vp.layoutXProperty(), (getWidth()-vip.getWidth())*0.5, Interpolator.EASE_IN),
+                        new KeyValue(vp.layoutYProperty(), (getHeight()-vip.getHeight())*0.5, Interpolator.EASE_IN)
+                    ));
 
                     ScaleTransition st = new ScaleTransition(OPEN_DURATION, vp);
+                    st.setFromY(0.1f);
+                    st.setFromX(0.1f);
                     st.setToX(sx);
                     st.setToY(sy);
 
                     ParallelTransition pt = new ParallelTransition(timeline, st);
-                    pt.play();
+                    pt.setOnFinished(event1 -> {
+                        //vp.setMinSize(getWidth(), getHeight());
+                        //vp.setPrefSize(getWidth(), getHeight());
+                        //System.out.println(getWidth() + ", " + getHeight());
+                        vp.setScaleX(1f);
+                        vp.setScaleY(1f);
+                        //vp.relocate(0, 0);
+                        //vp.requestLayout();
+
+                        vp.relocate(-(getWidth()-vip.getWidth())*0.5, -(getHeight()-vip.getHeight())*0.5);
+                        vp.setMinSize(getWidth(), getHeight());
+                        vp.setPrefSize(getWidth(), getHeight());
+                        vp.setMaxSize(getWidth(), getHeight());
+                        //requestLayout();
+                    });
+                    pt.play();*/
                 });
             }
         }
