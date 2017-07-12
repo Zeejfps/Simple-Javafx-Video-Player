@@ -1,5 +1,8 @@
 package videoplayer.views;
 
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -7,6 +10,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import videoplayer.App;
 import videoplayer.model.Video;
+import videoplayer.utils.Utils;
+
+import java.io.File;
+import java.net.URI;
 
 /**
  * Created by zeejfps on 7/6/2017.
@@ -43,11 +50,9 @@ public class VideoImagePane extends StackPane {
 
     private BorderPane buildLayout() {
         Label playButton = new Label("\uF144");
-        playButton.setStyle("-fx-text-fill: rgba(255, 255, 255, 0.30);");
+        playButton.setId("playButton");
         playButton.setScaleX(0.75f);
         playButton.setScaleY(0.75f);
-        playButton.setFont(App.FONT_AWESOME);
         return new BorderPane(playButton);
     }
-
 }

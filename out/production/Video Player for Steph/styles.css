@@ -1,0 +1,24 @@
+#playButton {
+    -fx-text-fill: rgba(255, 255, 255, 0.30);
+    -fx-font: 64px 'FontAwesome';
+}
+
+#closeButton {
+    -fx-font: 32px 'FontAwesome';
+    -fx-background-radius: 25em;
+    -fx-text-fill: #FFFFFF;
+    -fx-padding: 5px;
+    -fx-min-width: 75px;
+    -fx-min-height: 75px;
+    -fx-max-width: 75px;
+    -fx-max-height: 75px;
+    -fx-margins: 15px;
+}
+
+#closeButton:hover {
+    -fx-text-fill: #000000;
+}
+
+#mediaSlider {
+    -fx-padding: 15px;
+}

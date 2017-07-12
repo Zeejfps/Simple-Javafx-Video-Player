@@ -1,7 +1,11 @@
 package videoplayer;
 
 import javafx.application.Application;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -9,24 +13,25 @@ import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import videoplayer.model.Video;
-import videoplayer.views.VideoGridPane;
+import videoplayer.utils.Utils;
+import videoplayer.views.LoadingPane;
 import videoplayer.views.VideoWallPane;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Random;
 
 public class App extends Application {
 
     public static final Random R;
-    public static final Font FONT_AWESOME;
     static {
         R = new Random(System.nanoTime());
-        FONT_AWESOME = Font.loadFont(App.class.getClassLoader()
-                .getResourceAsStream("fontawesome-webfont.ttf"), 100);
+        Font.loadFont(App.class.getClassLoader()
+                .getResourceAsStream("fontawesome-webfont.ttf"), 12);
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose Video Directory");
         File chosenDir = directoryChooser.showDialog(primaryStage);
@@ -46,33 +51,22 @@ public class App extends Application {
             }
         });
 
-        VideoWallPane videoWallPane = new VideoWallPane(loadVideos(chosenDir));
-
-        VideoGridPane gridPane = videoWallPane.gridPane;
-        primaryStage.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            switch (event.getCode()) {
-                case LEFT:
-                    gridPane.translateRowLeft();
-                    break;
-                case RIGHT:
-                    gridPane.translateRowRight();
-                    break;
-                case UP:
-                    gridPane.translateColUp();
-                    break;
-                case DOWN:
-                    gridPane.translateColDown();
-                    break;
-            }
-        });
-
-        primaryStage.setScene(new Scene(videoWallPane));
+        Video[] videos = loadVideos(chosenDir);
+        LoadingPane loadingPane = new LoadingPane();
+        Scene scene = new Scene(loadingPane);
+        scene.getStylesheets().add("styles.css");
+        primaryStage.setScene(scene);
         primaryStage.setTitle("Video Player");
         primaryStage.setMaximized(true);
         primaryStage.setFullScreen(true);
         primaryStage.show();
-    }
 
+        GenThumbnailsTask task = new GenThumbnailsTask(videos);
+        task.setOnSucceeded(event -> scene.setRoot(new VideoWallPane(videos)));
+        Thread t = new Thread(task);
+        t.setDaemon(false);
+        t.start();
+    }
 
     private Video[] loadVideos(File vidDir) {
         // Get our video files
@@ -87,9 +81,27 @@ public class App extends Application {
             String imagePath = videoPath.replace(".mp4", ".png");
             videos[i] = new Video(videoPath, imagePath);
         }
-
         return videos;
     }
+
+    private static class GenThumbnailsTask extends Task<Void> {
+
+        private final Video[] videos;
+
+        public GenThumbnailsTask(Video[] videos) {
+            this.videos = videos;
+        }
+
+        @Override
+        protected Void call() throws Exception {
+            for (Video video : videos) {
+                Utils.genThumb(video.video, video.image);
+            }
+            System.out.println("Thumbnails generated!");
+            return null;
+        }
+    }
+
 
     public static void main(String[] args) {
         launch(args);
